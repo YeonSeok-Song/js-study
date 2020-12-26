@@ -9,21 +9,20 @@
     <span>문제 답</span>
         
     <script>
-        var answer = [];
-        var array = prompt("숫자 두개 입력(구분 공백)");
-        answer.push(array[0] + array[2]);
-
-        var array = prompt("체중 신장 순 입력(구분 공백)");
-        answer.push((array[2]*array[2]) / array[0]);
-
-        var array = prompt("문자열 입력");
-        answer.push(array.length);
-
-        for(i = 0; i < answer.length; i++){
-            document.write(answer[i]);
-            document.write("<br>");
+        var Human = function(name, atk) {
+            this.name;
+            this.hp = 100;
+            this.pow = atk;
         }
-
+        function Human(name, hp, mp, power) {
+            this.name = name;
+            this.hp = hp;
+            this.mp = mp;
+            this.power = power;
+        }
+        Human.prototype.attack = function(target) {
+            target.hp -= this.power;
+        };
     </script>
 </body>
 </html>

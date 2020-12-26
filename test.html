@@ -1,0 +1,76 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="test.css">
+    <title>Document</title>
+</head>
+<body>
+    <div id="container">
+        <div id="header"><h1>그림움직이기 테스트</h1></div>
+        <div id="sidebar"></div>
+        <div id="contents" ondragenter="onDragEnter(event)"  ondragover="onDragOver(event)"
+        ondrop="onDrop(event)"></div>
+        <div id="footer">
+            <h2>푸터</h2>
+            <p>수정해야 할 것 : 개선할 점 : 
+                마우스 클릭시 살짝 위로 올라와야 함.뒤에 약간 그림자 생기고
+                뭐랄까 집어 올렸다는 느낌이 나게 해야함</p>
+        </div>
+    </div>
+
+    <script>var dropBox = document.getElementById("dropbox");         
+        var dropImage = document.createElement("img");  
+               
+        function onDragEnter(event){   
+            if (event.dataTransfer.dropEffect == "move")
+              event.preventDefault();                   
+          }   
+        function onDragOver(event){
+          if (event.dataTransfer.dropEffect == "move") {
+            event.preventDefault();     
+        }                 
+        function onDrop(event){                               
+          var file = event.dataTransfer.files[0];     
+                
+          var imageType = /image.*/;
+          var textType = /text.*/;
+          var isImage;
+         
+          if(file.type.match(imageType)){
+            isImage = true;
+          }
+          else if(file.type.match(textType)){
+            isImage = false;
+          }
+                  
+          var reader = new FileReader();   
+         
+          reader.onload = (function(aFile){return function(e) {        
+              var result = e.target.result; 
+              if(isImage){
+                dropImage.src = result;                                                                           
+                dropBox.appendChild(dropImage)
+               }
+               else{
+                 dropBox.innerHTML = result;
+               }        
+              };
+            })(file);
+           
+          if(isImage){ reader.readAsDataURL(file); }
+          else { reader.readAsText(file,"EUC-KR"); }
+         
+          event.stopPropagation();
+          event.preventDefault();
+        }                     
+       
+        dropImage.addEventListener("load", function(e) {
+          //이미지 로딩 시 추가 처리할 로직 기입(사이즈 조절 등)           
+        }, true);         
+      
+      출처: https://m.mkexdev.net/87 [박종명의 아름다운 개발 since 2010.06]
+    </script>
+
+</body>
+</html>
