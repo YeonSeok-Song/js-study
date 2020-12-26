@@ -1,16 +1,18 @@
 <html lang="en">
-<head>
+  <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="test.css">
     <title>Document</title>
-</head>
-<body>
+  </head>
+  <body>
     <div id="container">
         <div id="header"><h1>그림움직이기 테스트</h1></div>
         <div id="sidebar"></div>
-        <div id="contents" ondragenter="onDragEnter(event)"  ondragover="onDragOver(event)"
-        ondrop="onDrop(event)"></div>
+        <div id="contents" ondragenter = "onDragEnter(event)"  
+        ondragover="onDragOver(event)" ondrop="onDrop(event)"><span>
+          삽입하고자 하는 이미지를 드래그하세요.
+        </span></div>
         <div id="footer">
             <h2>푸터</h2>
             <p>수정해야 할 것 : 개선할 점 : 
@@ -19,58 +21,61 @@
         </div>
     </div>
 
-    <script>var dropBox = document.getElementById("dropbox");         
-        var dropImage = document.createElement("img");  
-               
-        function onDragEnter(event){   
-            if (event.dataTransfer.dropEffect == "move")
-              event.preventDefault();                   
-          }   
-        function onDragOver(event){
-          if (event.dataTransfer.dropEffect == "move") {
-            event.preventDefault();     
-        }                 
-        function onDrop(event){                               
-          var file = event.dataTransfer.files[0];     
-                
-          var imageType = /image.*/;
-          var textType = /text.*/;
-          var isImage;
-         
-          if(file.type.match(imageType)){
-            isImage = true;
-          }
-          else if(file.type.match(textType)){
-            isImage = false;
-          }
-                  
-          var reader = new FileReader();   
-         
-          reader.onload = (function(aFile){return function(e) {        
-              var result = e.target.result; 
-              if(isImage){
-                dropImage.src = result;                                                                           
-                dropBox.appendChild(dropImage)
-               }
-               else{
-                 dropBox.innerHTML = result;
-               }        
-              };
-            })(file);
-           
-          if(isImage){ reader.readAsDataURL(file); }
-          else { reader.readAsText(file,"EUC-KR"); }
-         
-          event.stopPropagation();
-          event.preventDefault();
-        }                     
-       
-        dropImage.addEventListener("load", function(e) {
-          //이미지 로딩 시 추가 처리할 로직 기입(사이즈 조절 등)           
-        }, true);         
-      
-      출처: https://m.mkexdev.net/87 [박종명의 아름다운 개발 since 2010.06]
-    </script>
+    <script>
+      var dropBox = document.getElementById("contents");         
+      var dropImage = document.createElement("img");  
+      var imageType = /image.*/;
+      var textType = /text.*/;
+      var isImage;
 
-</body>
+      function onDragEnter(event){   
+        //if (event.dataTransfer.dropEffect == "move")
+          event.preventDefault(); //이벤트 발생하지 않게 막기             
+      }   
+      function onDragOver(event){
+        //if (event.dataTransfer.dropEffect == "move")
+          event.preventDefault();  //이벤트 발생하지 않게 막기
+      }                 
+      function onDrop(event){                               
+        var file = event.dataTransfer.files[0];               
+        console.log("eventdrop");
+        if(file.type.match(imageType)){
+          console.log("image");
+          isImage = true;
+        }
+        else if(file.type.match(textType)){
+          console.log("no image");
+          isImage = false;
+        }
+        var reader = new FileReader();   
+          
+        reader.onload = (function(File){return function(e) {   
+          console.log(e.target.result);
+          var result = e.target.result; //result는 이미지 대상의 데이터를
+          //데이터URL로 만들어 전달 > 인코딩은 base64 > 주소창에 치환하면 
+          //해당 데이터를 볼 수 있다. 
+          //img 태그에 src = e.target.result 이렇게 사용 가능
+            if(isImage){
+              dropImage.src = result;                                                                           
+              dropBox.appendChild(dropImage)
+            }
+            else{
+                dropBox.innerHTML = result;
+            }        
+          };
+        })(file);
+
+        if(isImage){ reader.readAsDataURL(file); }
+        else { reader.readAsText(file,"EUC-KR"); }
+
+        event.stopPropagation();
+        event.preventDefault();
+        
+        dropImage.addEventListener("load", function(e) {
+            //이미지 로딩 시 추가 처리할 로직 기입(사이즈 조절 등)           
+        }, true);
+    }
+    
+    </script>
+  </body>
 </html>
