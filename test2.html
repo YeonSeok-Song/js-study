@@ -7,7 +7,7 @@
   </head>
   <body>
     <div id="container">
-        <div id="header"><h1>그림움직이기 테스트</h1><button>저장</button></div>
+        <div id="header"><h1>그림움직이기 테스트</h1><button id="save" onClick = "save()">저장</button><button id="load" onClick = "load()">불러오기</button></div>
         <div id="sidebar"><h2>그림들</h2></div>
         <div id="contents" ondragenter = "onDragEnter(event)"  
         ondragover="onDragOver(event)" ondrop="onDrop(event)"><span>
@@ -16,6 +16,7 @@
         <div id="footer">
             <h2>푸터</h2>
             <p>수정해야 할 것 : 개선할 점 : 
+                노드.js로 서버를 만들어 사용자가 만든 내용을 저장할 수 있게 할 것.
                 마우스 클릭시 살짝 위로 올라와야 함.뒤에 약간 그림자 생기고
                 뭐랄까 집어 올렸다는 느낌이 나게 해야함</p>
         </div>
@@ -43,8 +44,56 @@
             var height = 0;
             var zindex = 0;
             var id = null;
+            var focus = false;
         }
 
+        function save(){
+            var totalInfo = new Object();
+            totalInfo.Image = JSON.stringify(itemList);
+            totalInfo.ImageCount = countIndex;
+            totalInfo.Zindex = upTodownCount;
+            JSON.stringify(totalInfo)
+            
+            if(!fileObject.FileExists(fullpath)){
+
+                var fWrite = fileObject.CreateTextFile(fullpath,false);
+                fWrite.write(msg);
+                fWrite.close();
+
+            }else{
+                var fWrite = fileObject.OpenTextFile(fullpath, 8);
+                fWrite.write(msg);
+                fWrite.close();
+
+            }
+            console.log("save");
+        }
+
+        function load(){
+            itemList = localStorage.getItem("Image");
+            countIndex = localStorage.getItem("ImageCount");
+            upTodownCount = localStorage.getItem("Zindex");
+            console.log("StorageImage");
+            for(var i = 0; i < itemList.length; i++){
+                var dropImageTemp = document.createElement("img");
+                dropImageTemp.src = itemList[i].src;
+                //console.log(dropImageTemp.src);
+                var strLeft = "left:" + itemList[i].left + "px;";
+                var strTop = "top:" + itemList[i].top + "px";
+                dropImageTemp.id = countIndex;
+                //console.log(strLeft+strTop)
+                dropImageTemp.setAttribute("style", strLeft+strTop)
+                dropImageTemp.onmousedown = function() {return startDrag(event, dropImageTemp); };
+                dropImageTemp.onclick = function() {return onClick(event, dropImageTemp); };
+                //console.log(dropImageTemp);
+                dropBox.append(dropImageTemp);
+            }
+            
+            countIndex++;
+            upTodownCount++;
+            console.log("load");
+        }
+        
         function getLeft(o){
           return parseInt(o.style.left.replace('px', ''));
         }
@@ -52,7 +101,39 @@
         function getTop(o){
           return parseInt(o.style.top.replace('px', ''));
         }
-
+        function onClick(e){
+            for(var i = 0; i < itemList.length; i++){
+                if (document.getElementById(itemList[i].id).style.border != ''){
+                    document.getElementById(itemList[i].id).style.removeProperty("border");
+                }
+            }
+            targetObj.setAttribute("style", targetObj.getAttribute('style') + "border : 1px solid red;");
+            var e_obj = window.event? window.event : e;
+            //console.log(targetObj.getAttribute('style'));
+            window.addEventListener("keydown", (e_obj) => {
+                console.log(targetObj.id)
+                console.log(itemList)
+                if (e_obj.keyCode == 46){//배열에서 안지워짐.ㄱ
+                    
+                    for(var i = 0; i < itemList.length; i++){
+                        console.log("delete");
+                        if(itemList[i].id == targetObj.id){
+                            console.log("find");
+                            itemList.splice(i, 1);
+                        }
+                    }
+                    /*
+                    const itemToFind = itemList.find(function(item) {return item.id === targetObj.id})
+                    console.log(itemToFind)
+                    const idx = itemList.indexOf(itemToFind)
+                    if (idx > -1) itemList.splice(idx, 1)
+                    */
+                    console.log(itemList)
+                    dropBox.removeChild(targetObj)
+                }
+            })
+            event.preventDefault();
+        }
         // 이미지 움직이기
         function moveDrag(e) {
             console.log("movedrag");
@@ -61,9 +142,17 @@
             var dmvy = parseInt(e_obj.clientY + img_T); //위 메서드는 클라이언트 영역 내의 가로,세로 좌표를 제공합니다. 
             //여기서 클라이언트 영역은 현재 보이는 브라우저 화면이 기준이 됩니다.
             targetObj.style.left = dmvx +"px"; //css의 탑과 left 값 변경하기
-            console.log(targetObj.style.left);
+            //console.log(targetObj.style.left);
             targetObj.style.top = dmvy +"px";
-            console.log(targetObj.style.top);
+            //console.log(targetObj.style.top);
+            for(var i = 0; i < itemList.length; i++){
+                if(itemList[i].id == targetObj.id){
+                    itemList[i].left = dmvx;
+                    itemList[i].top = dmvy;
+                }
+            }
+            
+
             return false;
         }
 
@@ -75,7 +164,6 @@
             img_L = getLeft(obj) - e_obj.clientX; //현재 이미지의 레프트 값을 가져와서 ??
             img_T = getTop(obj) - e_obj.clientY;  //오브젝트 위치와 클라이언트 화면에서의 위치를 계산해
           //위의 이미지 위치 변수에 넣는다.
-
             document.onmousemove = moveDrag; //마우스를 움직이면 움직이기 함수 실행
             document.onmouseup = stopDrag; //올리면 멈추기 함수
             if(e_obj.preventDefault)e_obj.preventDefault();
@@ -84,8 +172,6 @@
 
         // 드래그 멈추기 onmousedown='startDrag(event, this) 마우스를 누르면 스타트 드래그 시작
         function stopDrag(){
-            targetObj.style.left
-            targetObj.style.top
             document.onmousemove = null;
             document.onmouseup = null;
         }
@@ -121,7 +207,7 @@
             var reader = new FileReader();   
             
             reader.onload = (function(File){return function(e) {   
-                console.log(e.target.result);
+                //console.log(e.target.result);
                 var result = e.target.result; //result는 이미지 대상의 데이터를
                 //데이터URL로 만들어 전달 > 인코딩은 base64 > 주소창에 치환하면 
                 //해당 데이터를 볼 수 있다. 
@@ -131,8 +217,9 @@
                     
                     var info = new imageInfo(0, 0);
                     info.src = result;
+                    info.id = countIndex;
                     itemList.push(info);
- 
+                    
                     /*
                     dropImageTemp.src = result;
                     dropImageTemp.id = "index" + countIndex;
@@ -156,14 +243,20 @@
                     }
                     */
                     var dropImageTemp = document.createElement("img");
-                    dropImageTemp.src = itemList[countIndex].src;
-                    console.log(dropImageTemp.src);
-                    var strLeft = "left:" + itemList[countIndex].left + "px;";
-                    var strTop = "top:" + itemList[countIndex].top + "px";
-                    console.log(strLeft+strTop)
-                    dropImageTemp.setAttribute("style", strLeft+strTop)
+                    dropImageTemp.src = result;
+                    //console.log(dropImageTemp.src);
+                    for(var i = 0; i < itemList.length; i++){
+                        if(itemList[i].id == countIndex){
+                            var strLeft = "left:" + itemList[i].left + "px;";
+                            var strTop = "top:" + itemList[i].top + "px;";
+                            dropImageTemp.setAttribute("style", strLeft+strTop)
+                        }
+                    }
+                    dropImageTemp.id = countIndex;
+                    //console.log(strLeft+strTop)
                     dropImageTemp.onmousedown = function() {return startDrag(event, dropImageTemp); };
-                    console.log(dropImageTemp);
+                    dropImageTemp.onclick = function() {return onClick(event, dropImageTemp); };
+                    //console.log(dropImageTemp);
                     dropBox.append(dropImageTemp);
 
                     countIndex++;
